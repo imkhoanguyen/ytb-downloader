@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>YouTube Downloader</title>
+</head>
+
+<body>
+
+    <h2>YT Downloader (Save to Folder)</h2>
+
+    <input id="url" style="width:400px" placeholder="Paste YouTube link">
+    <button onclick="parse()">Load</button>
+
+    <hr>
+
+    <div id="list"></div>
+
+    <button onclick="downloadAll()">Download</button>
+
+    <script>
+
+        let videos = []
+
+        // =========================
+        // PARSE
+        // =========================
+        async function parse() {
+
+            const url = document.getElementById("url").value
+
+            const res = await fetch("/parse", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url })
+            })
+
+            const data = await res.json()
+
+            if (data.error) {
+                alert(data.error)
+                return
+            }
+
+            videos = data.videos
+
+            let html = ""
+
+            videos.forEach(v => {
+                html += `
+        <p>
+            <input type="checkbox" checked value="${v.url}">
+            ${v.title}
+        </p>`
+            })
+
+            document.getElementById("list").innerHTML = html
+        }
+
+
+        // =========================
+        // DOWNLOAD (NO ZIP)
+        // =========================
+        async function downloadAll() {
+
+            const urls = [...document.querySelectorAll("input[type=checkbox]:checked")]
+                .map(e => e.value)
+
+            const res = await fetch("/download", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ urls })
+            })
+
+            const data = await res.json()
+
+            console.log(data)
+
+            alert(
+                "Done!\n\n" +
+                "Success: " + data.success.length + "\n" +
+                "Failed: " + data.failed.length + "\n\n" +
+                "Folder: " + data.folder
+            )
+        }
+
+    </script>
+
+</body>
+
+</html>
